@@ -50,34 +50,22 @@ function read_file(filename)
         "humidity_to_location_map"
     ]
 
-    data_for_maps = Dict()
-    for (i, map_name) in enumerate(maps)
-        map_data = []
-        for row in split(blocks[i+1], '\n')
-            try
-                push!(map_data, parse.(Int64, split(row)))
-            catch e
-                if isa(e, ArgumentError)
-                    continue
-                else
-                    rethrow(e)
-                end
-            end
-        end
-        data_for_maps[map_name] = hcat(map_data...)'
-    end
+    data_for_maps = Dict(map_name => hcat([parse.(Int64, split(row)) for row in split(blocks[i+1], '\n') if occursin(r"^\d", row)]...)' for (i, map_name) in enumerate(maps))
 
     return real_seeds, seeds_range, data_for_maps, maps
 end
 
 function transform_location(loc, maps, data_for_maps)
     for map_name in reverse(maps)
-        for row in eachrow(data_for_maps[map_name])
-            src, dest, length = row
-            if src <= loc < src + length
-                loc = loc - src + dest
-                break
-            end
+        map_data = data_for_maps[map_name]
+        src = map_data[:, 1]
+        dest = map_data[:, 2]
+        len = map_data[:, 3]
+
+        # Find the first row where src <= loc < src + length
+        idx = findfirst(i -> src[i] <= loc < src[i] + len[i], 1:size(map_data, 1))
+        if !isnothing(idx)
+            loc = loc - src[idx] + dest[idx]
         end
     end
     return loc
@@ -88,10 +76,9 @@ function find_smallest_location(real_seeds, seeds_range, data_for_maps, maps)
     while j < 10000000000 
         transformed_loc = transform_location(j, maps, data_for_maps)
 
-        for (seed, length) in zip(real_seeds, seeds_range)
-            if seed <= transformed_loc < seed + length
-                return j  
-            end
+        # Check if the transformed location is within any real seed ranges
+        if any(seed <= transformed_loc < seed + length for (seed, length) in zip(real_seeds, seeds_range))
+            return j  
         end
         j += 1  
     end
