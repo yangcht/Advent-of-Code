@@ -3,10 +3,8 @@ import numpy as np
 with open('./d11_input.txt') as f:
     sky_map = np.array([list(line.strip()) for line in f])
 
-# Empty row and columns
 empty_row = np.where(~np.any(sky_map == '#', axis=1))[0]       
 empty_col = np.where(~np.any(sky_map == '#', axis=0))[0] 
-
 galaxy_positions = np.where(sky_map == '#')
 
 shortest_path = []
@@ -30,7 +28,6 @@ for i, x_value in enumerate(x_gal):
 
 shortest_path = np.array(shortest_path)
 expansion_factor = np.array(expansion_factor)
-
 
 #### Part 1
 factor = 2
