@@ -5,11 +5,10 @@ with open('./d11_input.txt') as f:
 
 empty_row = np.where(~np.any(sky_map == '#', axis=1))[0]       
 empty_col = np.where(~np.any(sky_map == '#', axis=0))[0] 
-galaxy_positions = np.where(sky_map == '#')
+y_gal, x_gal = np.argwhere(sky_map == '#').T
 
 shortest_path = []
 expansion_factor = []
-x_gal, y_gal = galaxy_positions[1], galaxy_positions[0]
 
 for i, x_value in enumerate(x_gal):
     for j in range(i + 1, len(x_gal)):
