@@ -1,65 +1,54 @@
 import numpy as np
-import time
+import itertools
+import time 
 
-def read_input(file_path):
-    spring_map = []
-    spring_code = []
-    with open(file_path) as f:
-        for line in f:
-            parts = line.strip().split()
-            spring_map.append(parts[0])
-            spring_code.append([int(num) for num in parts[1].split(',')])
-    return spring_map, spring_code
+symbols = ['#', '.', "?"]
+spring_map = []
+spring_code = []
 
-def generate_combinations(pattern, memo):
-    if pattern in memo:
-        return memo[pattern]
+with open('./d12_input.txt') as f:
+    for line in f:
+        parts = line.strip().split()
+        spring_map.append([char for char in parts[0] if char in symbols])
+        spring_code.append([int(num) for num in parts[1].split(',')])
 
-    if '?' not in pattern:
-        memo[pattern] = [pattern]
-        return memo[pattern]
+max_len = max([len(row) for row in spring_map])
+filled_spring_map = np.array([row + ['.'] * (max_len - len(row)) for row in spring_map])
 
-    results = []
-    question_mark_index = pattern.find('?')
-    for symbol in ['#', '.']:
-        new_pattern = pattern[:question_mark_index] + symbol + pattern[question_mark_index + 1:]
-        results.extend(generate_combinations(new_pattern, memo))
+combinations = itertools.product(symbols[:2], repeat=max_len)
+string_combinations = np.array([[char for char in ''.join(comb)] for comb in combinations])
 
-    memo[pattern] = results
-    return results
+matching_counts = []
+all_matching_counts = []
 
-def count_hashes(sequence):
-    counts = []
-    count = 0
-    for char in sequence:
-        if char == '#':
-            count += 1
-        elif char == '.':
-            if count > 0:
+start_time = time.time()
+
+for i, row in enumerate(filled_spring_map):
+    np_pattern = row
+    mask = np_pattern != '?'
+    matching_rows_mask = np.all((string_combinations[:, mask] == np_pattern[mask]) | (np_pattern[mask] == '?'), axis=1)
+    matching_rows = string_combinations[matching_rows_mask]
+
+    matching_counts_per_row = 0
+    for row in matching_rows:
+        count = 0
+        counts = []
+        for char in row:
+            if char == '#':
+                count += 1
+            elif char == '.' and count > 0:
                 counts.append(count)
-                count = 0
-    if count > 0:
-        counts.append(count)
-    return counts
+                count = 0 
+        if count > 0:
+            counts.append(count)        
 
-def main():
-    spring_map, spring_code = read_input('./d12_input.txt')
-    memo = {}
-    total_matching_counts = 0
+        if counts == spring_code[i]:
+            matching_counts.append(counts)
+            matching_counts_per_row = matching_counts_per_row + 1           
 
-    start_time = time.time()
+    all_matching_counts.append(matching_counts_per_row)
 
-    for row, code in zip(spring_map, spring_code):
-        matching_counts = 0
-        for combination in generate_combinations(row, memo):
-            if count_hashes(combination) == code:
-                matching_counts += 1
-        total_matching_counts += matching_counts
+print(sum(all_matching_counts))
 
-    print(total_matching_counts)
-
-    end_time = time.time()
-    print(f"Execution time: {end_time - start_time} seconds")
-
-if __name__ == "__main__":
-    main()
+end_time = time.time() 
+print(f"Execution time: {end_time - start_time} seconds")
