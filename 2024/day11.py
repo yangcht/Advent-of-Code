@@ -27,7 +27,7 @@ def ri(fp):
     return list(map(int, c.strip().split()))
 
 def main(num):
-    fp = './d11.txt'
+    fp = './inputs/day11_1.txt'
     is_ = ri(fp)
 
     tb = num
