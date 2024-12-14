@@ -16,7 +16,7 @@ filter_warnings() {
 
 run_benchmark() {
     local cmd="$1"
-    hyperfine --warmup 2 --export-json temp.json "$cmd" > /dev/null 2>&1
+    hyperfine --warmup 3 --export-json temp.json "$cmd" > /dev/null 2>&1
     mean=$(jq '.results[0].mean' temp.json | xargs printf "%.5f")
     stddev=$(jq '.results[0].stddev' temp.json | xargs printf "%.5f")
     mintime=$(jq '.results[0].min' temp.json | xargs printf "%.5f")
