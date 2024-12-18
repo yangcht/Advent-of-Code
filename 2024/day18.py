@@ -4,11 +4,8 @@ def read_input(file):
     with open(file) as f:
         return [tuple(map(int, line.strip().split(','))) for line in f]
 
-def mem_grid(size, positions, limit=1024):
-    grid = [['.' for _ in range(size)] for _ in range(size)]
-    for i, (x, y) in enumerate(positions[:limit]):
-        grid[y][x] = '#'
-    return grid
+def mem_grid(size):
+    return [['.' for m in range(size)] for n in range(size)]
 
 def shortest_path(grid, start, end):
     size = len(grid)
@@ -27,9 +24,26 @@ def shortest_path(grid, start, end):
                 q.append((nx, ny, steps + 1))
     return -1
 
+def find_blocking_byte(grid, positions, start, end):
+    for i, (x, y) in enumerate(positions):
+        grid[y][x] = '#'
+        if shortest_path(grid, start, end) == -1:
+            return x, y
+    return None
+
 def main():
-    grid = mem_grid(71, read_input('./inputs/day18_1.txt'))
+    positions = read_input('./inputs/day18_1.txt')
+    grid = mem_grid(71)
+
+    # PART 1: Path sarch after 1024 bytes
+    for i, (x, y) in enumerate(positions[:1024]):
+        grid[y][x] = '#'
     print(f"Q1 Min steps is {shortest_path(grid, (0, 0), (70, 70))}")
+
+    # PART 2: First blocking byte
+    grid = mem_grid(71)
+    blocking_byte = find_blocking_byte(grid, positions, (0, 0), (70, 70))
+    print(f"Q2 First blocking byte is {blocking_byte[0]},{blocking_byte[1]}")
 
 if __name__ == "__main__":
     main()
